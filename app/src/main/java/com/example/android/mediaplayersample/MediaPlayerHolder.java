@@ -19,6 +19,9 @@ package com.example.android.mediaplayersample;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.media.MediaPlayer;
+import android.media.PlaybackParams;
+import android.net.Uri;
+import android.view.Surface;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -34,10 +37,11 @@ public final class MediaPlayerHolder implements PlayerAdapter {
 
     private final Context mContext;
     private MediaPlayer mMediaPlayer;
-    private int mResourceId;
     private PlaybackInfoListener mPlaybackInfoListener;
     private ScheduledExecutorService mExecutor;
     private Runnable mSeekbarPositionUpdateTask;
+    private String mFilePath;
+    private Surface mSurface;
 
     public MediaPlayerHolder(Context context) {
         mContext = context.getApplicationContext();
@@ -53,6 +57,7 @@ public final class MediaPlayerHolder implements PlayerAdapter {
     private void initializeMediaPlayer() {
         if (mMediaPlayer == null) {
             mMediaPlayer = new MediaPlayer();
+            mMediaPlayer.setSurface(mSurface);
             mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mediaPlayer) {
@@ -74,16 +79,13 @@ public final class MediaPlayerHolder implements PlayerAdapter {
 
     // Implements PlaybackControl.
     @Override
-    public void loadMedia(int resourceId) {
-        mResourceId = resourceId;
-
+    public void loadMedia(String path, Surface surface) {
+        mFilePath = path;
+        mSurface = surface;
         initializeMediaPlayer();
-
-        AssetFileDescriptor assetFileDescriptor =
-                mContext.getResources().openRawResourceFd(mResourceId);
         try {
-            logToUI("load() {1. setDataSource}");
-            mMediaPlayer.setDataSource(assetFileDescriptor);
+            logToUI(String.format("setDataSource(%s)", mFilePath));
+            mMediaPlayer.setDataSource(mContext, Uri.parse(mFilePath), null);
         } catch (Exception e) {
             logToUI(e.toString());
         }
@@ -119,8 +121,7 @@ public final class MediaPlayerHolder implements PlayerAdapter {
     @Override
     public void play() {
         if (mMediaPlayer != null && !mMediaPlayer.isPlaying()) {
-            logToUI(String.format("playbackStart() %s",
-                                  mContext.getResources().getResourceEntryName(mResourceId)));
+            logToUI(String.format("playbackStart() %s", mFilePath));
             mMediaPlayer.start();
             if (mPlaybackInfoListener != null) {
                 mPlaybackInfoListener.onStateChanged(PlaybackInfoListener.State.PLAYING);
@@ -130,16 +131,39 @@ public final class MediaPlayerHolder implements PlayerAdapter {
     }
 
     @Override
+    public void setSpeed(float rate) {
+        PlaybackParams params = new PlaybackParams();
+        params.allowDefaults();
+        params.setSpeed(rate).setPitch(1.0f);
+        try {
+            mMediaPlayer.setPlaybackParams(params);
+        } catch (Exception e) {
+            logToUI(e.toString());
+        }
+        try {
+            params = mMediaPlayer.getPlaybackParams();
+            logToUI(String.format("set speed to %f, get return %f", rate, params.getSpeed()));
+        } catch (Exception e) {
+            logToUI(e.toString());
+        }
+    }
+
+    @Override
     public void reset() {
         if (mMediaPlayer != null) {
             logToUI("playbackReset()");
             mMediaPlayer.reset();
-            loadMedia(mResourceId);
+            loadMedia(mFilePath, mSurface);
             if (mPlaybackInfoListener != null) {
                 mPlaybackInfoListener.onStateChanged(PlaybackInfoListener.State.RESET);
             }
             stopUpdatingCallbackWithPosition(true);
         }
+    }
+
+    public void reset(String path) {
+        mFilePath = path;
+        reset();
     }
 
     @Override

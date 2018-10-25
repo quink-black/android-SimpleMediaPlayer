@@ -15,63 +15,107 @@
   ~ limitations under the License.
   -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical">
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <ScrollView
-            android:id="@+id/scroll_container"
+        <SurfaceView
+            android:id="@+id/surfaceView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_margin="8dp"
-            android:layout_weight="1">
+            android:gravity="bottom"
+            android:orientation="vertical">
 
-        <TextView
-                android:id="@+id/text_debug"
+            <ScrollView
+                android:id="@+id/scroll_container"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_margin="8dp"
+                android:focusable="false">
+
+                <TextView
+                    android:id="@+id/text_debug"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textSize="12sp" />
+
+            </ScrollView>
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="monospace"
-                android:textSize="12sp"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
+                android:gravity="bottom"
+                android:orientation="horizontal">
 
-    </ScrollView>
+                <Button
+                    android:id="@+id/button_play"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="3dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_bg"
+                    android:text="Play" />
 
-    <SeekBar
-            android:id="@+id/seekbar_audio"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:layout_marginTop="16dp"/>
+                <Button
+                    android:id="@+id/button_pause"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="3dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_bg"
+                    android:text="Pause" />
 
-    <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:gravity="center_horizontal"
-            android:orientation="horizontal">
+                <Button
+                    android:id="@+id/button_reset"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="3dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_bg"
+                    android:text="Reset" />
 
-        <Button
-                android:id="@+id/button_play"
-                android:layout_width="wrap_content"
+                <Button
+                    android:id="@+id/speed_fast"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="3dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_bg"
+                    android:text="fast" />
+
+                <Button
+                    android:id="@+id/speed_slow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="3dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_bg"
+                    android:text="slow" />
+
+                <Button
+                    android:id="@+id/stream"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="3dp"
+                    android:layout_weight="2"
+                    android:background="@drawable/button_bg"
+                    android:text="stream" />
+
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/seekbar_audio"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="4"
-                android:text="Play"/>
+                android:layout_marginBottom="32dp"
+                android:layout_marginTop="32dp"/>
+        </LinearLayout>
 
-        <Button
-                android:id="@+id/button_pause"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Pause"/>
+</FrameLayout>
 
-        <Button
-                android:id="@+id/button_reset"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Reset"/>
-
-    </LinearLayout>
-
-</LinearLayout>

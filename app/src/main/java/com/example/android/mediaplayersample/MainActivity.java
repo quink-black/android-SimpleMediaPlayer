@@ -16,9 +16,15 @@
 
 package com.example.android.mediaplayersample;
 
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.security.keystore.KeyNotYetValidException;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ScrollView;
@@ -33,13 +39,17 @@ import android.widget.TextView;
 public final class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "MainActivity";
-    public static final int MEDIA_RES_ID = R.raw.jazz_in_paris;
 
     private TextView mTextDebug;
     private SeekBar mSeekbarAudio;
     private ScrollView mScrollContainer;
     private PlayerAdapter mPlayerAdapter;
     private boolean mUserIsSeeking = false;
+    private SurfaceView mVideoSurface;
+    private float mRate = 1.0f;
+    private final String mLocalFile = "/sdcard/test.mp4"; //android.resource://com.example.android.mediaplayersample/raw/" + R.raw.test;
+    private final String mNetStream = "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8";
+    private String mUri = mNetStream;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,14 +58,30 @@ public final class MainActivity extends AppCompatActivity {
         initializeUI();
         initializeSeekbar();
         initializePlaybackController();
+        mVideoSurface = (SurfaceView)findViewById(R.id.surfaceView);
+        mVideoSurface.getHolder().addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+                mPlayerAdapter.loadMedia(mUri, mVideoSurface.getHolder().getSurface());
+                Log.d(TAG, "onStart: create MediaPlayer");
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+
+            }
+        });
         Log.d(TAG, "onCreate: finished");
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mPlayerAdapter.loadMedia(MEDIA_RES_ID);
-        Log.d(TAG, "onStart: create MediaPlayer");
     }
 
     @Override
@@ -71,9 +97,14 @@ public final class MainActivity extends AppCompatActivity {
 
     private void initializeUI() {
         mTextDebug = (TextView) findViewById(R.id.text_debug);
-        Button mPlayButton = (Button) findViewById(R.id.button_play);
+        mTextDebug.setTextColor(Color.RED);
+        mTextDebug.setTypeface(null, Typeface.BOLD);
+        final Button mPlayButton = (Button) findViewById(R.id.button_play);
         Button mPauseButton = (Button) findViewById(R.id.button_pause);
         Button mResetButton = (Button) findViewById(R.id.button_reset);
+        Button mSpeedFastButton = (Button) findViewById(R.id.speed_fast);
+        Button mSpeedSlowButton = (Button) findViewById(R.id.speed_slow);
+        Button mStreamToggleButton = (Button) findViewById(R.id.stream);
         mSeekbarAudio = (SeekBar) findViewById(R.id.seekbar_audio);
         mScrollContainer = (ScrollView) findViewById(R.id.scroll_container);
 
@@ -95,9 +126,52 @@ public final class MainActivity extends AppCompatActivity {
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        mRate = 1.0f;
                         mPlayerAdapter.reset();
                     }
                 });
+        mSpeedFastButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (mRate < 2)
+                            mRate += 0.2f;
+                        else
+                            mRate += 0.5f;
+                        if (mRate >= 16.0f)
+                            mRate = 16.0f;
+                        mPlayerAdapter.setSpeed(mRate);
+                    }
+                }
+        );
+        mSpeedSlowButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (mRate < 2)
+                            mRate -= 0.2f;
+                        else
+                            mRate -= 0.5f;
+                        if (mRate < 0.0f)
+                            mRate = 0.0f;
+                        mPlayerAdapter.setSpeed(mRate);
+                    }
+                }
+        );
+        mStreamToggleButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (mUri.equals(mLocalFile))
+                            mUri = mNetStream;
+                        else
+                            mUri = mLocalFile;
+                        mRate = 1.0f;
+                        mPlayerAdapter.reset(mUri);
+                        mPlayerAdapter.play();
+                    }
+                }
+        );
     }
 
     private void initializePlaybackController() {
@@ -131,6 +205,24 @@ public final class MainActivity extends AppCompatActivity {
                         mPlayerAdapter.seekTo(userSelectedPosition);
                     }
                 });
+        mSeekbarAudio.setOnKeyListener(
+                new View.OnKeyListener() {
+                    @Override
+                    public boolean onKey(View v, int keyCode, KeyEvent event) {
+                        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT ||
+                                keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                            if (event.getAction() == KeyEvent.ACTION_UP) {
+                                mUserIsSeeking = false;
+                                if (mPlayerAdapter != null)
+                                    mPlayerAdapter.seekTo(mSeekbarAudio.getProgress());
+                            } else if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                                mUserIsSeeking = true;
+                            }
+                        }
+                        return false;
+                    }
+                }
+        );
     }
 
     public class PlaybackListener extends PlaybackInfoListener {
@@ -144,7 +236,8 @@ public final class MainActivity extends AppCompatActivity {
         @Override
         public void onPositionChanged(int position) {
             if (!mUserIsSeeking) {
-                mSeekbarAudio.setProgress(position, true);
+                //mSeekbarAudio.setProgress(position, true);
+                mSeekbarAudio.setProgress(position);
                 Log.d(TAG, String.format("setPlaybackPosition: setProgress(%d)", position));
             }
         }

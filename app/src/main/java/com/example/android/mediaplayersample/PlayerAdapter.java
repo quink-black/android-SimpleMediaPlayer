@@ -16,12 +16,14 @@
 
 package com.example.android.mediaplayersample;
 
+import android.view.Surface;
+
 /**
  * Allows {@link MainActivity} to control media playback of {@link MediaPlayerHolder}.
  */
 public interface PlayerAdapter {
 
-    void loadMedia(int resourceId);
+    void loadMedia(String FilePath, Surface surface);
 
     void release();
 
@@ -30,8 +32,11 @@ public interface PlayerAdapter {
     void play();
 
     void reset();
+    void reset(String FilePath);
 
     void pause();
+
+    void setSpeed(float rate);
 
     void initializeProgressCallback();
 
